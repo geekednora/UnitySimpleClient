@@ -11,6 +11,28 @@ using UnityEditor.VersionControl;
 
 public class NetworkClient : MonoBehaviour
 {
+    // Setting up Singleton instance...
+
+    private static NetworkClient _instance;
+    public static NetworkClient Instance
+    { 
+        get
+        {
+            if (_instance == null)
+                _instance = new NetworkClient();
+
+            return _instance; 
+        } 
+    }
+
+    private void Awake()
+    {
+        _instance = this;
+    }
+
+    // End of Singleton. //
+
+
     // Setting local IP address with our own function.
     // In reality, should pull IP from Cloud Server.
     private readonly string _IPaddress = LocalIPAddress();
@@ -24,6 +46,8 @@ public class NetworkClient : MonoBehaviour
     private int _reliableChannelID;
     private int _unreliableChannelID;
     private string _userLogin, _userPassword;
+
+    
 
     // Start is called before the first frame update
     [Obsolete]
