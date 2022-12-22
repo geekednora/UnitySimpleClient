@@ -7,11 +7,11 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class NetworkedClient : MonoBehaviour
+public class NetworkClient : MonoBehaviour
 {
-    private readonly string _IPaddress = "10.0.225.72";
+    private readonly string _IPaddress = LocalIPAddress();
     private readonly int _maxConnections = 1000;
-    private readonly int _socketPort = 5492;
+    private readonly int _socketPort = 5491;
     private int _connectionID;
     private byte _error;
     private int _hostID;
@@ -26,17 +26,26 @@ public class NetworkedClient : MonoBehaviour
     private void Start()
     {
         Connect();
-        Debug.Log(LocalIPAddress());
     }
 
     // Update is called once per frame
     [Obsolete]
     private void Update()
     {
+        if(!_isConnected)
+        {
+            Connect();
+        } else { Awake(); }
+    }
+
+    [Obsolete]
+    private void Awake()
+    {
         UpdateNetworkConnection();
     }
 
-    [System.Obsolete]
+    //  UpdateNetworkConnection is called in Update.
+    [Obsolete]
     private void UpdateNetworkConnection()
     {
         if (_isConnected)
@@ -59,11 +68,11 @@ public class NetworkedClient : MonoBehaviour
                 case NetworkEventType.DataEvent:
                     var msg = Encoding.Unicode.GetString(recBuffer, 0, dataSize);
                     ProcessRecievedMsg(msg, recConnectionID);
-                    Debug.Log("got msg = " + msg);
                     break;
                 case NetworkEventType.DisconnectEvent:
                     _isConnected = false;
                     Debug.Log("disconnected.  " + recConnectionID);
+                    Connect();
                     break;
             }
 
@@ -71,7 +80,8 @@ public class NetworkedClient : MonoBehaviour
         }
     }
 
-    [System.Obsolete]
+    // Connect() is called in Start.
+    [Obsolete]
     private void Connect()
     {
         Debug.Log("Attempting to connect.\n Host: " + _IPaddress + ":" + _socketPort);
@@ -102,17 +112,17 @@ public class NetworkedClient : MonoBehaviour
         }
     }
 
-    [System.Obsolete]
+    [Obsolete]
     public void Disconnect()
     {
         NetworkTransport.Disconnect(_hostID, _connectionID, out _error);
     }
 
-    [System.Obsolete]
+    [Obsolete]
     public void SendMessageToHost(string msg)
     {
         var buffer = Encoding.Unicode.GetBytes(msg);
-        NetworkTransport.Send(_hostID, _connectionID, _reliableChannelID, buffer, msg.Length * sizeof(char),
+        NetworkTransport.Send(_hostID, _connectionID-1, _reliableChannelID, buffer, msg.Length * sizeof(char),
             out _error);
     }
 
@@ -133,7 +143,7 @@ public class NetworkedClient : MonoBehaviour
         host = Dns.GetHostEntry(Dns.GetHostName());
         foreach (IPAddress ip in host.AddressList)
         {
-            if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+            if (ip.AddressFamily == AddressFamily.InterNetwork)
             {
                 localIP = ip.ToString();
                 break;
