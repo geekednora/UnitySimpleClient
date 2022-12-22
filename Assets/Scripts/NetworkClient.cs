@@ -6,9 +6,13 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.UIElements;
+using UnityEditor.VersionControl;
 
 public class NetworkClient : MonoBehaviour
 {
+    // Setting local IP address with our own function.
+    // In reality, should pull IP from Cloud Server.
     private readonly string _IPaddress = LocalIPAddress();
     private readonly int _maxConnections = 1000;
     private readonly int _socketPort = 5491;
@@ -35,13 +39,12 @@ public class NetworkClient : MonoBehaviour
         if(!_isConnected)
         {
             Connect();
-        } else { Awake(); }
-    }
+        } else { UpdateNetworkConnection(); }
 
-    [Obsolete]
-    private void Awake()
-    {
-        UpdateNetworkConnection();
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            SendMessageToHost("I am your user! Connection ID: " + _connectionID);
+        }
     }
 
     //  UpdateNetworkConnection is called in Update.
@@ -75,8 +78,6 @@ public class NetworkClient : MonoBehaviour
                     Connect();
                     break;
             }
-
-            if (Input.GetKeyDown(KeyCode.S)) SendMessageToHost("Hi there!");
         }
     }
 
@@ -122,8 +123,9 @@ public class NetworkClient : MonoBehaviour
     public void SendMessageToHost(string msg)
     {
         var buffer = Encoding.Unicode.GetBytes(msg);
-        NetworkTransport.Send(_hostID, _connectionID-1, _reliableChannelID, buffer, msg.Length * sizeof(char),
-            out _error);
+        NetworkTransport.Send(_hostID, _connectionID, _reliableChannelID, buffer, msg.Length * sizeof(char), out _error);
+
+        Debug.Log("Message sent!");
     }
 
     private void ProcessRecievedMsg(string msg, int id)
@@ -131,6 +133,7 @@ public class NetworkClient : MonoBehaviour
         Debug.Log("msg recieved = " + msg + ".  connection id = " + id);
     }
 
+    /* GETTERS */
     public bool IsConnected()
     {
         return _isConnected;
